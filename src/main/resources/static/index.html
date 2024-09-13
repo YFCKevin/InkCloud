@@ -1,0 +1,526 @@
+<!-- /*
+* Bootstrap 5
+* Template Name: Furni
+* Template Author: Untree.co
+* Template URI: https://untree.co/
+* License: https://creativecommons.org/licenses/by/3.0/
+*/ -->
+<!DOCTYPE html>
+<html lang="en" xmlns:x-on="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="author" content="Untree.co" />
+    <meta property="og:title" content="一朵墨">
+    <meta property="og:description" content="「一朵墨」書籍管理系統是專為書籍管理而設計的全能平台。AI存書、書籍搜尋管理，並支援多介面協作。一朵墨讓書籍管理變得簡單高效。">
+    <meta property="og:image" content="images/favicon.png">
+    <meta property="og:url" content="https://www.gurula.cc/inkCloud/index.html">
+    <meta property="og:type" content="website">
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="icon" href="images/favicon.png" type="image/x-icon"/>
+
+    <meta name="description" content="" />
+    <meta name="keywords" content="bootstrap, bootstrap4" />
+
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link href="css/tiny-slider.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet" />
+    <script src="js/deviceType.js"></script>
+    <title>一朵墨</title>
+  </head>
+
+  <body x-data="loadData();" x-init="init();">
+    <!-- Start Header/Navigation -->
+    <nav
+      class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark"
+      arial-label="Furni navigation bar"
+    >
+      <div class="container">
+        <a class="navbar-brand" href="index.html">InkCloud</a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarsFurni"
+          aria-controls="navbarsFurni"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarsFurni">
+          <ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+            <li class="nav-item active">
+              <a class="nav-link" href="index.html">首頁</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- End Header/Navigation -->
+
+    <!-- Start Hero Section -->
+    <div class="hero" style="margin-bottom: 50px">
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col-lg-5">
+            <div class="intro-excerpt">
+              <h1>一朵<span clsas="d-block">墨</span></h1>
+              <p class="mb-4">
+                一朵墨書籍管理系統是專為書籍管理而設計的全能平台。AI存書、書籍搜尋管理，並支援桌機與手機瀏覽操作。
+              </p>
+              <p>
+                <input
+                  type="file"
+                  id="imageInput"
+                  multiple
+                  accept="image/*"
+                  hidden="hidden"
+                />
+              </p>
+              <p>
+                <button x-on:click="upload()" class="btn btn-secondary me-2">
+                  AI存書
+                </button>
+              </p>
+              <p>
+                <input
+                  id="keyword"
+                  x-on:keydown.enter="search()"
+                  type="search"
+                  class="form-control"
+                  placeholder="可搜尋書名、作者、出版社名..."
+                />
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Hero Section -->
+
+    <!-- Start book -->
+    <div class="popular-product">
+      <div class="container">
+        <div class="mb-4 fw-bold fs-5">
+          <span><i class="fas fa-book me-2"></i>總共有 </span>
+          <span x-text="bookData.length"></span>
+          <span> 本書</span>
+        </div>
+        <div class="row">
+          <template x-for="(item,index) in getData()" :key="index">
+            <div class="col-12 col-md-6 col-lg-6 mb-4 mb-lg-0">
+              <div class="product-item-sm d-flex" style="margin-bottom: 5rem">
+                <div class="thumbnail">
+                  <img
+                    src="images/cover_book.jpg"
+                    alt="Image"
+                    class="img-fluid rounded-circle"
+                  />
+                </div>
+                <div class="pt-3 ms-3">
+                  <h3
+                    class="mb-3"
+                    x-text="item.title"
+                    style="font-size: 1.25rem"
+                  ></h3>
+                  <div class="d-flex mb-2">
+                    <p class="me-1 fw-bold flex-shrink-0">作者：</p>
+                    <p class="text-wrap" x-text="item.author"></p>
+                  </div>
+                  <div class="d-flex mb-4">
+                    <p class="me-1 fw-bold flex-shrink-0">出版社：</p>
+                    <p class="text-wrap" x-text="item.publisher"></p>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button
+                      x-on:click="openEditBook(item.id, item.title, item.author, item.publisher)"
+                      class="btn btn-sm btn-primary"
+                    >
+                      編輯
+                    </button>
+                    <button
+                      x-on:click="openDeleteBook(item.id)"
+                      class="btn btn-sm btn-danger"
+                    >
+                      刪除
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <nav class="mt-5 mb-4" x-show="pageCount() > 1">
+            <ul class="pagination justify-content-center card-page">
+              <li class="page-item" :class="{ 'disabled' : pageNumber==0 }">
+                <a
+                  class="page-link page-prev"
+                  type="button"
+                  x-on:click="prevPage();"
+                  :disabled="pageNumber==0"
+                >
+                  <i class="fa fas fa-chevron-left"></i>
+                </a>
+              </li>
+              <li
+                class="page-item disabled"
+                :class="{ 'd-none' : pageCount() <= 4 || pageNumber == 0 || ( pageCount() > 4 && pageNumber == pageCount() ) }"
+              >
+                <a class="page-link">···</a>
+              </li>
+              <template x-for="(page,index) in pages()" :key="index">
+                <li
+                  class="page-item"
+                  :class="{ 'active' : index === pageNumber , 'd-none' : pageCount() > 4 && ( (index < pageNumber && pageNumber < pageCount() -4) || (index < pageCount() -4 && pageNumber >= pageCount() -4) || index >= pageNumber+4 ) }"
+                >
+                  <a
+                    class="page-link"
+                    type="button"
+                    x-on:click="viewPage(index);"
+                    x-text="index+1"
+                  ></a>
+                </li>
+              </template>
+              <li
+                class="page-item disabled"
+                :class="{ 'd-none' : pageCount() <= 4 || pageNumber >= pageCount() -4}"
+              >
+                <a class="page-link">···</a>
+              </li>
+              <li
+                class="page-item"
+                :class="{ 'disabled' : pageNumber >= pageCount() -1 }"
+              >
+                <a
+                  class="page-link page-next"
+                  type="button"
+                  x-on:click="nextPage();"
+                  :disabled="pageNumber >= pageCount() -1"
+                >
+                  <i class="fa fas fa-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <!-- End book -->
+
+    <!-- Start Footer Section -->
+    <footer class="footer-section">
+      <div class="container relative">
+        <div class="border-top copyright">
+          <div class="row pt-4">
+            <div class="col-lg-6">
+              <p class="mb-2 text-center text-lg-start">
+                Copyright &copy;
+                <script>
+                  document.write(new Date().getFullYear());
+                </script>
+                . All Rights Reserved. &mdash; Designed with love by
+                <a href="https://untree.co">Untree.co</a> Distributed By
+                <a hreff="https://themewagon.com">ThemeWagon</a>
+                <!-- License information: https://untree.co/license/ -->
+              </p>
+            </div>
+
+            <div class="col-lg-6 text-center text-lg-end">
+              <ul class="list-unstyled d-inline-flex ms-auto">
+                <li class="me-4"><a href="#">Terms &amp; Conditions</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- End Footer Section -->
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/tiny-slider.js"></script>
+    <script src="js/custom.js"></script>
+    <script src="js/sweetalert.min.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/alpine.2.8.2.min.js"></script>
+    <script>
+      function loadData() {
+        return {
+          pageNumber: 0,
+          size: 20,
+          total: "",
+          bookData: [],
+
+          init() {
+            let _this = this;
+            let data = {};
+            data.keyword = "";
+            $.ajax({
+              url: "searchBook",
+              type: "post",
+              dataType: "json",
+              data: JSON.stringify(data),
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                _this.pageNumber = 0;
+                _this.bookData = response.data;
+              },
+            });
+          },
+          getData() {
+            const start = this.pageNumber * this.size,
+              end = start + this.size;
+            let filterData = this.bookData;
+            this.total = filterData.length;
+            return filterData.slice(start, end);
+          },
+          pages() {
+            return Array.from({
+              length: Math.ceil(this.total / this.size),
+            });
+          },
+          nextPage() {
+            this.pageNumber++;
+<!--				    window.scrollTo(0, 0); // 滾動到頁面頂部-->
+          },
+          prevPage() {
+            this.pageNumber--;
+<!--				    window.scrollTo(0, 0); // 滾動到頁面頂部-->
+          },
+          pageCount() {
+            return Math.ceil(this.total / this.size);
+          },
+          viewPage(index) {
+            this.pageNumber = index;
+<!--				    window.scrollTo(0, 0); // 滾動到頁面頂部-->
+          },
+          upload() {
+            const imageInput = document.getElementById("imageInput");
+            imageInput.click();
+
+            imageInput.addEventListener(
+              "change",
+              () => {
+                const files = imageInput.files;
+                const imageRequests = [];
+
+                if (files.length > 50) {
+                  alert("一次最多50張圖片");
+                  return;
+                }
+
+                Array.from(files).forEach((file) => {
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                    const base64Img = e.target.result.split(",")[1];
+
+                    const swalLoading = Swal.fire({
+                      title: "AI處理中，請稍候......",
+                      text: "",
+                      icon: "info",
+                      allowOutsideClick: false,
+                      showConfirmButton: false,
+                      customClass: {
+                        popup: "swal-modal",
+                      },
+                    });
+
+                    imageRequests.push({
+                      fileName: file.name, // 記錄檔案名稱
+                      images: [base64Img], // 假設每個檔案只包含一張圖片
+                    });
+
+                    if (imageRequests.length === files.length) {
+                      this.sendImages(imageRequests);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                });
+              },
+              { once: true }
+            );
+          },
+          sendImages(imageRequests) {
+            let _this = this;
+            $.ajax({
+              url: "saveMultiBook",
+              type: "post",
+              dataType: "json",
+              data: JSON.stringify(imageRequests),
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  const data = response.data;
+                  let successCount = data.successCount;
+                  let errorCount = data.errorCount;
+                  Swal.fire({
+                    title: "存書成功",
+                    html: "匯入：" + successCount + "本<br>失敗：" + errorCount + "本",
+                    icon: "success",
+                    confirmButtonText: "關閉",
+                    customClass: {
+                      confirmButton: "btn btn-success",
+                    },
+                  });
+                  _this.pageNumber = 0;
+                  _this.init();
+                } else {
+                  Swal.fire({
+                    title: "系統錯誤，請聯繫管理員！",
+                    text: "",
+                    icon: "error",
+                    confirmButtonText: "關閉",
+                    customClass: {
+                      confirmButton: "btn btn-danger",
+                    },
+                  });
+                }
+              },
+            });
+          },
+          openEditBook(id, title, author, publisher) {
+            let _this = this;
+            Swal.fire({
+              title: '編輯書本資料',
+              html: `
+                <div class="mb-3 text-start">
+                  <label for="swal-input-title" class="form-label">書名：</label>
+                  <input id="swal-input-title" class="form-control" value="${title}" placeholder="輸入書名">
+                </div>
+                <div class="mb-3 text-start">
+                  <label for="swal-input-author" class="form-label">作者：</label>
+                  <input id="swal-input-author" class="form-control" value="${author}" placeholder="輸入作者">
+                </div>
+                <div class="mb-3 text-start">
+                  <label for="swal-input-publisher" class="form-label">出版社：</label>
+                  <input id="swal-input-publisher" class="form-control" value="${publisher}" placeholder="輸入出版社">
+                </div>
+              `,
+              focusConfirm: false,
+              preConfirm: () => {
+                return {
+                  title: $('#swal-input-title').val(),
+                  author: $('#swal-input-author').val(),
+                  publisher: $('#swal-input-publisher').val()
+                };
+              },
+              showCancelButton: true,
+              confirmButtonText: '確認',
+              cancelButtonText: '取消',
+              customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-danger'
+              }
+            }).then((result) => {
+              if (result.isConfirmed) {
+                const { title, author, publisher } = result.value;
+                _this.editBook(id, title, author, publisher);
+              }
+            });
+          },
+          editBook(id, title, author, publisher){
+            let _this = this;
+            let data = {};
+            data.id = id;
+            data.title = title;
+            data.author = author;
+            data.publisher = publisher;
+
+            $.ajax({
+              url: "editBook",
+              type: "post",
+              dataType: "json",
+              data: JSON.stringify(data),
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  Swal.fire({
+                    title: "編輯成功",
+                    icon: "success",
+                    confirmButtonText: "關閉",
+                    customClass: {
+                      confirmButton: "btn btn-success",
+                    },
+                  });
+                  _this.pageNumber = 0;
+                  _this.init();
+                }
+              },
+            });
+          },
+          openDeleteBook(id){
+			let _this = this;
+			Swal.fire({
+			  title: '確認要刪除？',
+			  text: '',
+			  icon: 'warning',
+			  showCancelButton: true,
+			  confirmButtonText: '確認',
+			  cancelButtonText: '取消',
+			  customClass: {
+				confirmButton: 'btn btn-success',
+				cancelButton: 'btn btn-danger'
+			  }
+			}).then((result) => {
+			  if (result.isConfirmed) {
+				_this.deleteBook(id);
+			  }
+			});
+          },
+          deleteBook(id) {
+            let _this = this;
+            $.ajax({
+              url: "deleteBook/" + id,
+              type: "delete",
+              dataType: "json",
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  Swal.fire({
+                    title: "刪除成功",
+                    icon: "success",
+                    confirmButtonText: "關閉",
+                    customClass: {
+                      confirmButton: "btn btn-success",
+                    },
+                  });
+                  _this.pageNumber = 0;
+                  _this.init();
+                }
+              },
+            });
+          },
+          search() {
+            let _this = this;
+            let data = {};
+            let keyword = $("#keyword").val();
+            data.keyword = keyword;
+            $.ajax({
+              url: "searchBook",
+              type: "post",
+              dataType: "json",
+              data: JSON.stringify(data),
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  _this.pageNumber = 0;
+                  _this.bookData = response.data;
+                }
+              },
+            });
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
