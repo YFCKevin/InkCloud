@@ -18,6 +18,15 @@ public class Video {
     private String error;   //紀錄錯誤訊息
     private String creationDate;
     private String creator;
+    private String deletionDate;
+
+    public String getDeletionDate() {
+        return deletionDate;
+    }
+
+    public void setDeletionDate(String deletionDate) {
+        this.deletionDate = deletionDate;
+    }
 
     public String getId() {
         return id;

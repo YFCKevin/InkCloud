@@ -124,6 +124,7 @@ public class VideoServiceImpl implements VideoService{
                     resultStatus.setCode("C999");
                     resultStatus.setMessage("FFmpeg失敗");
                     video.setError("FFmpeg失敗");
+                    videoRepository.save(video);
                     logger.error("FFmpeg失敗，退出指令：{}", exitCode);
                 }
 
@@ -132,6 +133,7 @@ public class VideoServiceImpl implements VideoService{
                 resultStatus.setCode("C999");
                 resultStatus.setMessage("例外發生");
                 video.setError("FFmpeg例外發生");
+                videoRepository.save(video);
             }
 //        finally {
 //            if (imageListFile.exists()) {
@@ -149,5 +151,15 @@ public class VideoServiceImpl implements VideoService{
     @Override
     public Optional<Video> findById(String videoId) {
         return videoRepository.findById(videoId);
+    }
+
+    @Override
+    public List<Video> findByDeletionDateIsNull() {
+        return videoRepository.findByDeletionDateIsNull();
+    }
+
+    @Override
+    public Optional<Video> findBySourceBookId(String bookId) {
+        return videoRepository.findBySourceBookId(bookId);
     }
 }

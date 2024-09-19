@@ -14,6 +14,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 
 import java.io.FileOutputStream;
@@ -57,7 +58,7 @@ public class AudioServiceImpl implements AudioService{
         final String bookName = workFlowDTO.getBookName();
         final String content = workFlowDTO.getNarration();
 
-        ClassPathResource resource = new ClassPathResource("static/js/text-and-speech-secret-key.json");
+        FileSystemResource resource = new FileSystemResource(configProperties.getJsonPath() + "text-and-speech-secret-key.json");
 
         // 取得憑證資料
         try (InputStream inputStream = resource.getInputStream()) {
@@ -105,6 +106,7 @@ public class AudioServiceImpl implements AudioService{
                             workFlowDTO.setCode("C999");
                             workFlowDTO.setMsg("音訊儲存失敗");
                             video.setError("音訊儲存失敗");
+                            videoService.save(video);
                             logger.error("音訊儲存失敗，導向錯誤");
                             rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
                         }
@@ -112,6 +114,7 @@ public class AudioServiceImpl implements AudioService{
                         workFlowDTO.setCode("C999");
                         workFlowDTO.setMsg("保存音訊時發生錯誤");
                         video.setError("保存音訊時發生錯誤");
+                        videoService.save(video);
                         logger.error("保存音訊時發生錯誤: {}", e.getMessage());
                         rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
                     }
@@ -121,6 +124,7 @@ public class AudioServiceImpl implements AudioService{
             workFlowDTO.setCode("C999");
             workFlowDTO.setMsg(e.getMessage());
             video.setError("[音訊] google發生錯誤");
+            videoService.save(video);
             logger.error(e.getMessage(), e);
             rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
         }

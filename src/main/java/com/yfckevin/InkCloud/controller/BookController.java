@@ -14,12 +14,15 @@ import com.yfckevin.InkCloud.entity.ErrorFile;
 import com.yfckevin.InkCloud.entity.Video;
 import com.yfckevin.InkCloud.exception.ResultStatus;
 import com.yfckevin.InkCloud.service.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
@@ -41,8 +44,9 @@ public class BookController {
     private final ErrorFileService errorFileService;
     private final RabbitTemplate rabbitTemplate;
     private final SimpleDateFormat sdf;
+    private final RestTemplate restTemplate;
 
-    public BookController(ConfigProperties configProperties, VideoService videoService, ObjectMapper objectMapper, BookService bookService, OpenAiService openAiService, ErrorFileService errorFileService, RabbitTemplate rabbitTemplate, @Qualifier("sdf") SimpleDateFormat sdf) {
+    public BookController(ConfigProperties configProperties, VideoService videoService, ObjectMapper objectMapper, BookService bookService, OpenAiService openAiService, ErrorFileService errorFileService, RabbitTemplate rabbitTemplate, @Qualifier("sdf") SimpleDateFormat sdf, RestTemplate restTemplate) {
         this.configProperties = configProperties;
         this.videoService = videoService;
         this.objectMapper = objectMapper;
@@ -51,6 +55,7 @@ public class BookController {
         this.errorFileService = errorFileService;
         this.rabbitTemplate = rabbitTemplate;
         this.sdf = sdf;
+        this.restTemplate = restTemplate;
     }
 
 
@@ -162,6 +167,7 @@ public class BookController {
 
     /**
      * 刪書
+     *
      * @param id
      * @return
      */
@@ -171,8 +177,8 @@ public class BookController {
         bookService.findById(id)
                 .ifPresent(
                         book -> {
-                           book.setDeletionDate(sdf.format(new Date()));
-                           bookService.save(book);
+                            book.setDeletionDate(sdf.format(new Date()));
+                            bookService.save(book);
                         });
         resultStatus.setCode("C000");
         resultStatus.setMessage("成功");
@@ -182,10 +188,11 @@ public class BookController {
 
     /**
      * 修書
+     *
      * @return
      */
     @PostMapping("/editBook")
-    public ResponseEntity<?> editBook (@RequestBody BookDTO bookDTO){
+    public ResponseEntity<?> editBook(@RequestBody BookDTO bookDTO) {
         bookService.findById(bookDTO.getId()).ifPresent(book -> {
             book.setTitle(bookDTO.getTitle());
             book.setAuthor(bookDTO.getAuthor());
@@ -201,11 +208,12 @@ public class BookController {
 
     /**
      * 查書
+     *
      * @param searchDTO
      * @return
      */
     @PostMapping("/searchBook")
-    public ResponseEntity<?> searchBook (@RequestBody SearchDTO searchDTO){
+    public ResponseEntity<?> searchBook(@RequestBody SearchDTO searchDTO) {
         List<Book> bookList = bookService.findBook(searchDTO);
         final List<BookDTO> bookDTOList = bookList.stream()
                 .map(BookController::constructBookDTO)
@@ -220,7 +228,7 @@ public class BookController {
 
 
     @GetMapping("/getVideoId/{bookId}")
-    public ResponseEntity<?> getVideoId (@PathVariable String bookId){
+    public ResponseEntity<?> getVideoId(@PathVariable String bookId) {
         ResultStatus resultStatus = new ResultStatus();
         final Optional<Book> opt = bookService.findById(bookId);
         if (opt.isEmpty()) {
@@ -240,7 +248,7 @@ public class BookController {
 
 
     @PostMapping("/constructVideo")
-    public ResponseEntity<?> constructVideo (@RequestBody VideoRequestDTO dto){
+    public ResponseEntity<?> constructVideo(@RequestBody VideoRequestDTO dto) {
         ResultStatus resultStatus = new ResultStatus();
         final Optional<Book> opt = bookService.findById(dto.getBookId());
         if (opt.isEmpty()) {
@@ -257,6 +265,67 @@ public class BookController {
             rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.llm", narrationMsgDTO);
             resultStatus.setCode("C000");
             resultStatus.setMessage("成功");
+        }
+        return ResponseEntity.ok(resultStatus);
+    }
+
+
+
+    @GetMapping("/previewBook/{bookId}")
+    public ResponseEntity<?> bookStatus (@PathVariable String bookId){
+        ResultStatus resultStatus = new ResultStatus();
+
+        final Optional<Book> bookOpt = bookService.findById(bookId);
+        if (bookOpt.isEmpty()) {
+            resultStatus.setCode("C001");
+            resultStatus.setMessage("查無書籍");
+        } else {
+            Optional<Video> videoOpt = videoService.findBySourceBookId(bookId);
+            if (videoOpt.isEmpty()) {
+
+                resultStatus.setCode("C005");
+                resultStatus.setMessage("尚未生成試閱影片");
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                ResponseEntity<ResultStatus<String>> response = restTemplate.exchange(
+                        configProperties.getGlobalDomain() + "getVideoId/" + bookId,
+                        HttpMethod.GET,
+                        new HttpEntity<>(headers),
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                ResultStatus<String> responseResult = response.getBody();
+                if (responseResult != null && "C000".equals(responseResult.getCode())) {
+                    String videoId = responseResult.getData();
+
+                    VideoRequestDTO dto = new VideoRequestDTO();
+                    dto.setBookId(bookId);
+                    dto.setVideoId(videoId);
+
+                    restTemplate.postForEntity(
+                            configProperties.getGlobalDomain() + "constructVideo",
+                            new HttpEntity<>(dto),
+                            Void.class
+                    );
+                }
+
+            } else {
+                final Video video = videoOpt.get();
+                if (StringUtils.isBlank(video.getPath()) && StringUtils.isNotBlank(video.getError())) {
+                    //製作影片過程有錯誤
+                    resultStatus.setCode("C003");
+                    resultStatus.setMessage("錯誤發生");
+                } else if (StringUtils.isBlank(video.getPath()) && StringUtils.isBlank(video.getError())) {
+                    //影片製作中
+                    resultStatus.setCode("C004");
+                    resultStatus.setMessage("試閱影片製作中");
+                } else if (StringUtils.isNotBlank(video.getPath()) && StringUtils.isBlank(video.getError())) {
+                    resultStatus.setCode("C000");
+                    resultStatus.setMessage("成功");
+                    resultStatus.setData(configProperties.getVideoShowPath() + video.getName());
+                }
+            }
         }
         return ResponseEntity.ok(resultStatus);
     }

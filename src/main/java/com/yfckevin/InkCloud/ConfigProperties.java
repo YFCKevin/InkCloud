@@ -23,6 +23,8 @@ public class ConfigProperties {
     public String audioSavePath;
     @Value("${config.videoSavePath}")
     public String videoSavePath;
+    @Value("${config.videoShowPath}")
+    public String videoShowPath;
     @Value("${config.globalDomain}")
     public String globalDomain;
     @Value("${spring.data.mongodb.uri}")
@@ -100,5 +102,9 @@ public class ConfigProperties {
 
     public String getRabbitmqPassword() {
         return rabbitmqPassword;
+    }
+
+    public String getVideoShowPath() {
+        return videoShowPath;
     }
 }
