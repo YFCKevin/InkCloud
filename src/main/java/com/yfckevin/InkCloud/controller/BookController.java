@@ -7,22 +7,20 @@ import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Image;
 import com.google.protobuf.ByteString;
 import com.yfckevin.InkCloud.ConfigProperties;
-import com.yfckevin.InkCloud.dto.BookDTO;
-import com.yfckevin.InkCloud.dto.ImageRequestDTO;
-import com.yfckevin.InkCloud.dto.SearchDTO;
+import com.yfckevin.InkCloud.config.RabbitMQConfig;
+import com.yfckevin.InkCloud.dto.*;
 import com.yfckevin.InkCloud.entity.Book;
 import com.yfckevin.InkCloud.entity.ErrorFile;
+import com.yfckevin.InkCloud.entity.Video;
 import com.yfckevin.InkCloud.exception.ResultStatus;
-import com.yfckevin.InkCloud.service.BookService;
-import com.yfckevin.InkCloud.service.ErrorFileService;
-import com.yfckevin.InkCloud.service.OpenAiService;
+import com.yfckevin.InkCloud.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -36,20 +34,22 @@ import java.util.stream.Collectors;
 public class BookController {
     Logger logger = LoggerFactory.getLogger(BookController.class);
     private final ConfigProperties configProperties;
-    private final SimpleDateFormat picSuffix;
+    private final VideoService videoService;
     private final ObjectMapper objectMapper;
     private final BookService bookService;
     private final OpenAiService openAiService;
     private final ErrorFileService errorFileService;
+    private final RabbitTemplate rabbitTemplate;
     private final SimpleDateFormat sdf;
 
-    public BookController(ConfigProperties configProperties, @Qualifier("picSuffix") SimpleDateFormat picSuffix, ObjectMapper objectMapper, BookService bookService, OpenAiService openAiService, ErrorFileService errorFileService, @Qualifier("sdf") SimpleDateFormat sdf) {
+    public BookController(ConfigProperties configProperties, VideoService videoService, ObjectMapper objectMapper, BookService bookService, OpenAiService openAiService, ErrorFileService errorFileService, RabbitTemplate rabbitTemplate, @Qualifier("sdf") SimpleDateFormat sdf) {
         this.configProperties = configProperties;
-        this.picSuffix = picSuffix;
+        this.videoService = videoService;
         this.objectMapper = objectMapper;
         this.bookService = bookService;
         this.openAiService = openAiService;
         this.errorFileService = errorFileService;
+        this.rabbitTemplate = rabbitTemplate;
         this.sdf = sdf;
     }
 
@@ -103,7 +103,7 @@ public class BookController {
                         rawText = rawText.replaceAll("\\r?\\n", "");
                         logger.info("圖轉文：{}", rawText);
 
-                        final ResultStatus<String> completionResult = openAiService.completion(rawText);
+                        final ResultStatus<String> completionResult = openAiService.getBookInfo(rawText);
                         final String code = completionResult.getCode();
                         final String message = completionResult.getMessage();
                         ErrorFile errorFile = new ErrorFile();
@@ -217,6 +217,50 @@ public class BookController {
         resultStatus.setData(bookDTOList);
         return ResponseEntity.ok(resultStatus);
     }
+
+
+    @GetMapping("/getVideoId/{bookId}")
+    public ResponseEntity<?> getVideoId (@PathVariable String bookId){
+        ResultStatus resultStatus = new ResultStatus();
+        final Optional<Book> opt = bookService.findById(bookId);
+        if (opt.isEmpty()) {
+            resultStatus.setCode("C001");
+            resultStatus.setMessage("查無書籍");
+        } else {
+            final Book book = opt.get();
+            Video video = new Video();
+            video.setSourceBookId(book.getId());
+            Video savedVideo = videoService.save(video);
+            resultStatus.setCode("C000");
+            resultStatus.setMessage("成功");
+            resultStatus.setData(savedVideo.getId());
+        }
+        return ResponseEntity.ok(resultStatus);
+    }
+
+
+    @PostMapping("/constructVideo")
+    public ResponseEntity<?> constructVideo (@RequestBody VideoRequestDTO dto){
+        ResultStatus resultStatus = new ResultStatus();
+        final Optional<Book> opt = bookService.findById(dto.getBookId());
+        if (opt.isEmpty()) {
+            resultStatus.setCode("C001");
+            resultStatus.setMessage("查無書籍");
+        } else {
+            final Book book = opt.get();
+            String text = "書名:" + book.getTitle() + "," + "作者:" + book.getAuthor();
+            NarrationMsgDTO narrationMsgDTO = new NarrationMsgDTO();
+            narrationMsgDTO.setText(text);
+            narrationMsgDTO.setBookId(dto.getBookId());
+            narrationMsgDTO.setVideoId(dto.getVideoId());
+            narrationMsgDTO.setBookName(book.getTitle());
+            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.llm", narrationMsgDTO);
+            resultStatus.setCode("C000");
+            resultStatus.setMessage("成功");
+        }
+        return ResponseEntity.ok(resultStatus);
+    }
+
 
     private static BookDTO constructBookDTO(Book book) {
         BookDTO dto = new BookDTO();

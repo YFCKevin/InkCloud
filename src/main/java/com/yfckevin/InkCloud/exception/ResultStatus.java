@@ -2,8 +2,10 @@ package com.yfckevin.InkCloud.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serializable;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResultStatus<T> {
+public class ResultStatus<T> implements Serializable {
     private String code;  //錯誤代碼
     private String message;
     private T data;

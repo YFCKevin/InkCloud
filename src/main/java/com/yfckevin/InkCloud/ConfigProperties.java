@@ -19,10 +19,20 @@ public class ConfigProperties {
     public String picSavePath;
     @Value("${config.picShowPath}")
     public String picShowPath;
+    @Value("${config.audioSavePath}")
+    public String audioSavePath;
+    @Value("${config.videoSavePath}")
+    public String videoSavePath;
     @Value("${config.globalDomain}")
     public String globalDomain;
     @Value("${spring.data.mongodb.uri}")
     public String mongodbUri;
+    @Value("${spring.rabbitmq.host}")
+    public String rabbitmqHost;
+    @Value("${spring.rabbitmq.username}")
+    public String rabbitmqUserName;
+    @Value("${spring.rabbitmq.password}")
+    public String rabbitmqPassword;
     @Value("${config.aiPicSavePath}")
     public String aiPicSavePath;
     @Value("${config.aiPicShowPath}")
@@ -70,5 +80,25 @@ public class ConfigProperties {
 
     public String getAiPicShowPath() {
         return aiPicShowPath;
+    }
+
+    public String getVideoSavePath() {
+        return videoSavePath;
+    }
+
+    public String getAudioSavePath() {
+        return audioSavePath;
+    }
+
+    public String getRabbitmqHost() {
+        return rabbitmqHost;
+    }
+
+    public String getRabbitmqUserName() {
+        return rabbitmqUserName;
+    }
+
+    public String getRabbitmqPassword() {
+        return rabbitmqPassword;
     }
 }

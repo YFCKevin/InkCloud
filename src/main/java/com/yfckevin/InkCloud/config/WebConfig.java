@@ -20,6 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/inkCloud_files/**").addResourceLocations("file:"+ configProperties.getFileSavePath());
         registry.addResourceHandler("/inkCloud_images/**").addResourceLocations("file:"+ configProperties.getPicSavePath());
+        registry.addResourceHandler("/inkCloud_video/**").addResourceLocations("file:"+ configProperties.getVideoSavePath());
         registry.addResourceHandler("/ai_images/**").addResourceLocations("file:"+ configProperties.getAiPicSavePath());
         registry.addResourceHandler("/inkCloud/**").addResourceLocations("classpath:/static/");
 //        super.addResourceHandlers(registry);
