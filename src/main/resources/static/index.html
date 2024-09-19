@@ -148,18 +148,21 @@
                     <button
                       x-on:click="openEditBook(item.id, item.title, item.author, item.publisher)"
                       class="btn btn-sm btn-primary"
+                      style="padding: 12px 18px;"
                     >
                       編輯
                     </button>
                     <button
                       x-on:click="openDeleteBook(item.id)"
                       class="btn btn-sm btn-danger"
+                      style="padding: 12px 18px;"
                     >
                       刪除
                     </button>
                     <button
                             x-on:click="preview(item.id, $event)"
                             class="btn btn-sm btn-secondary"
+                            style="padding: 12px 18px;"
                             data-id="{{ item.id }}"
                     >
                       <span class="loadingIcon" style="display: none;">
