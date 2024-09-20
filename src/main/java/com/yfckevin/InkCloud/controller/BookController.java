@@ -15,6 +15,7 @@ import com.yfckevin.InkCloud.entity.Video;
 import com.yfckevin.InkCloud.exception.ResultStatus;
 import com.yfckevin.InkCloud.service.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.regexp.RE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -327,6 +328,21 @@ public class BookController {
                 }
             }
         }
+        return ResponseEntity.ok(resultStatus);
+    }
+
+
+    @GetMapping("/getPreviewStatus")
+    public ResponseEntity<?> getPreviewStatus (){
+        ResultStatus resultStatus = new ResultStatus();
+        List<Video> videoList = videoService.findByDeletionDateIsNull();
+        final List<String> InProcessBookIds = videoList.stream()
+                .filter(video -> StringUtils.isBlank(video.getPath()) && StringUtils.isBlank(video.getError()))
+                .map(Video::getSourceBookId)
+                .toList();
+        resultStatus.setCode("C000");
+        resultStatus.setMessage("成功");
+        resultStatus.setData(InProcessBookIds);
         return ResponseEntity.ok(resultStatus);
     }
 

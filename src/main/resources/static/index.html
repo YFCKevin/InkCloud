@@ -165,10 +165,10 @@
                             style="padding: 12px 18px;"
                             data-id="{{ item.id }}"
                     >
-                      <span class="loadingIcon" style="display: none;">
-                          <i class="fa fa-spinner fa-spin"></i>
+                      <span class="loadingIcon" x-show="isLoading(item.id)" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i>
                       </span>
-                      <span class="buttonText">試閱</span>
+                      <span class="buttonText" x-show="!isLoading(item.id)">試閱</span>
                     </button>
                   </div>
                 </div>
@@ -299,6 +299,7 @@
           size: 20,
           total: "",
           bookData: [],
+          bookIdList: [],
 
           init() {
             let _this = this;
@@ -311,12 +312,26 @@
               data: JSON.stringify(data),
               contentType: "application/json; charset=utf-8",
               success: function (response) {
-                _this.pageNumber = 0;
-                _this.bookData = response.data;
+                if (response.code == "C000"){
+                  _this.pageNumber = 0;
+                  _this.bookData = response.data;
+                }
               },
             });
-
-
+            $.ajax({
+              url: "getPreviewStatus",
+              type: "get",
+              dataType: "json",
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000"){
+                  _this.bookIdList = response.data;
+                }
+              },
+            });
+          },
+          isLoading(id) {
+            return this.bookIdList.includes(id);
           },
           getData() {
             const start = this.pageNumber * this.size,
