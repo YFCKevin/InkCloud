@@ -159,6 +159,7 @@ public class OpenAiServiceImpl implements OpenAiService {
             narration.setSourceBookId(dto.getBookId());
             narration.setText(content);
             narration.setCreationDate(sdf.format(new Date()));
+            narration.setMemberId(dto.getMemberId());
             Narration savedNarration = narrationService.save(narration);
 
             if (savedNarration != null) {
@@ -169,6 +170,7 @@ public class OpenAiServiceImpl implements OpenAiService {
                 workFlowDTO.setNarrationId(savedNarration.getId());
                 workFlowDTO.setNarration(savedNarration.getText());
                 workFlowDTO.setVideoId(dto.getVideoId());
+                workFlowDTO.setMemberId(savedNarration.getMemberId());
                 logger.info("旁白儲存成功，繼續執行製作mp3");
                 rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.audio", workFlowDTO);
             } else {

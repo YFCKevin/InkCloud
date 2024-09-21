@@ -7,6 +7,15 @@ public class NarrationMsgDTO implements Serializable {
     private String videoId;
     private String bookName;
     private String text;
+    private String memberId;
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
 
     public String getBookId() {
         return bookId;

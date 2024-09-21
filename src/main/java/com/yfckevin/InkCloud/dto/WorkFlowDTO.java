@@ -11,6 +11,15 @@ public class WorkFlowDTO {
     private String audioPath;
     private String code;
     private String msg;
+    private String memberId;
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
 
     public String getCode() {
         return code;

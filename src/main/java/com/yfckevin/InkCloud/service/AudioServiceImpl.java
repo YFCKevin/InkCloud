@@ -57,6 +57,7 @@ public class AudioServiceImpl implements AudioService{
         final String bookId = workFlowDTO.getBookId();
         final String bookName = workFlowDTO.getBookName();
         final String content = workFlowDTO.getNarration();
+        final String memberId = workFlowDTO.getMemberId();
 
         FileSystemResource resource = new FileSystemResource(configProperties.getJsonPath() + "text-and-speech-secret-key.json");
 
@@ -92,6 +93,7 @@ public class AudioServiceImpl implements AudioService{
                     audio.setSourceBookId(bookId);
                     audio.setCreationDate(sdf.format(new Date()));
                     audio.setName(bookName + "_" + System.currentTimeMillis());
+                    audio.setMemberId(memberId);
                     Audio savedAudio = audioRepository.save(audio);
 
                     try {

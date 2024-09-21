@@ -17,4 +17,6 @@ public interface BookService {
     void save(Book book);
 
     List<Book> findBook(SearchDTO searchDTO);
+
+    List<Book> findByTypeAndDeletionDateIsNull(String type);
 }

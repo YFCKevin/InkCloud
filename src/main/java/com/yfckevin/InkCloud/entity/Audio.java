@@ -13,6 +13,15 @@ public class Audio {
     private long size;    //檔案大小(byte)
     private String creationDate;
     private String creator;
+    private String memberId;
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
 
     public String getId() {
         return id;

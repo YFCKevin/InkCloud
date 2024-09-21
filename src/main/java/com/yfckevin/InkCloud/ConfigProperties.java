@@ -39,6 +39,33 @@ public class ConfigProperties {
     public String aiPicSavePath;
     @Value("${config.aiPicShowPath}")
     public String aiPicShowPath;
+    @Value("${spring.security.oauth2.client.registration.line.client-id}")
+    private String clientId;
+
+    @Value("${spring.security.oauth2.client.registration.line.client-secret}")
+    private String clientSecret;
+
+    @Value("${spring.security.oauth2.client.provider.line.token-uri}")
+    private String tokenUri;
+
+    @Value("${spring.security.oauth2.client.provider.line.user-info-uri}")
+    private String userInfoUri;
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public String getTokenUri() {
+        return tokenUri;
+    }
+
+    public String getUserInfoUri() {
+        return userInfoUri;
+    }
 
     public String getApiKey() {
         return apiKey;

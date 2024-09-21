@@ -11,9 +11,11 @@ import com.yfckevin.InkCloud.config.RabbitMQConfig;
 import com.yfckevin.InkCloud.dto.*;
 import com.yfckevin.InkCloud.entity.Book;
 import com.yfckevin.InkCloud.entity.ErrorFile;
+import com.yfckevin.InkCloud.entity.Member;
 import com.yfckevin.InkCloud.entity.Video;
 import com.yfckevin.InkCloud.exception.ResultStatus;
 import com.yfckevin.InkCloud.service.*;
+import jakarta.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.regexp.RE;
 import org.slf4j.Logger;
@@ -60,6 +62,54 @@ public class BookController {
     }
 
 
+    @GetMapping("/bookcase")
+    public ResponseEntity<?> bookcase (HttpSession session){
+
+        final Member member = (Member) session.getAttribute("member");
+        ResultStatus resultStatus = new ResultStatus();
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[searchBook]");
+        } else {
+            final List<Book> demoBookList = bookService.findByTypeAndDeletionDateIsNull("DEMO");
+            final List<BookDTO> bookDTOList = demoBookList.stream()
+                    .map(BookController::constructBookDTO)
+                    .sorted(Comparator.comparing(BookDTO::getCreationDate).reversed())
+                    .toList();
+            resultStatus.setCode("C000");
+            resultStatus.setMessage("成功");
+            resultStatus.setData(bookDTOList);
+            return ResponseEntity.ok(resultStatus);
+        }
+        SearchDTO searchDTO = new SearchDTO();
+        searchDTO.setKeyword("");
+        List<Book> bookList = bookService.findBook(searchDTO);
+        final List<Book> demoBookList = bookService.findByTypeAndDeletionDateIsNull("DEMO");
+        bookList.addAll(demoBookList);
+        final List<BookDTO> bookDTOList = bookList.stream()
+                .collect(Collectors.toMap(
+                        Book::getId,
+                        BookController::constructBookDTO,
+                        (existing, replacement) -> {
+                            if ("DEMO".equals(replacement.getType())) {
+                                return replacement;
+                            }
+                            if ("DEMO".equals(existing.getType())) {
+                                return existing;
+                            }
+                            return existing;
+                        }
+                ))
+                .values().stream()
+                .sorted(Comparator.comparing(BookDTO::getCreationDate).reversed())
+                .toList();
+
+        resultStatus.setCode("C000");
+        resultStatus.setMessage("成功");
+        resultStatus.setData(bookDTOList);
+        return ResponseEntity.ok(resultStatus);
+    }
+
+
     /**
      * 批量存書
      *
@@ -67,7 +117,13 @@ public class BookController {
      * @return
      */
     @PostMapping("/saveMultiBook")
-    public ResponseEntity<?> saveMultiBook(@RequestBody List<ImageRequestDTO> imageRequestDTOs) {
+    public ResponseEntity<?> saveMultiBook(@RequestBody List<ImageRequestDTO> imageRequestDTOs, HttpSession session) {
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[saveMultiBook]");
+        }
+
         ResultStatus resultStatus = new ResultStatus();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
@@ -121,7 +177,9 @@ public class BookController {
                             bookList = bookList.stream()
                                     .peek(book -> {
                                         book.setCreationDate(sdf.format(new Date()));
+                                        book.setCreator(member.getName());
                                         book.setSourceCoverName(fileName);
+                                        book.setMemberId(member.getId());
                                     })
                                     .collect(Collectors.toList());
                             bookService.saveAll(bookList);
@@ -131,6 +189,7 @@ public class BookController {
                             errorFile.setErrorCode(code);
                             errorFile.setErrorMsg(message);
                             errorFile.setCoverName(fileName);
+                            errorFile.setMemberId(member.getId());
                             ErrorFile savedErrorFile = errorFileService.save(errorFile);
                             logger.error("處理異常，檔案名: {}", filePath);
                             errorCount.incrementAndGet(); // 增加錯誤筆數
@@ -139,6 +198,7 @@ public class BookController {
                         ErrorFile errorFile = new ErrorFile();
                         errorFile.setErrorMsg(e.getMessage());
                         errorFile.setCoverName(originalFileName);
+                        errorFile.setMemberId(member.getId());
                         ErrorFile savedErrorFile = errorFileService.save(errorFile);
                         logger.error("處理檔案 {} 時發生異常: {}", originalFileName, e.getMessage(), e);
                         errorCount.incrementAndGet(); // 增加錯誤筆數
@@ -173,7 +233,13 @@ public class BookController {
      * @return
      */
     @DeleteMapping("/deleteBook/{id}")
-    public ResponseEntity<?> deleteBook(@PathVariable String id) {
+    public ResponseEntity<?> deleteBook(@PathVariable String id, HttpSession session) {
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[deleteBook]");
+        }
+
         ResultStatus resultStatus = new ResultStatus();
         bookService.findById(id)
                 .ifPresent(
@@ -193,11 +259,19 @@ public class BookController {
      * @return
      */
     @PostMapping("/editBook")
-    public ResponseEntity<?> editBook(@RequestBody BookDTO bookDTO) {
+    public ResponseEntity<?> editBook(@RequestBody BookDTO bookDTO, HttpSession session) {
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[editBook]");
+        }
+
         bookService.findById(bookDTO.getId()).ifPresent(book -> {
             book.setTitle(bookDTO.getTitle());
             book.setAuthor(bookDTO.getAuthor());
             book.setPublisher(bookDTO.getPublisher());
+            book.setModifier(member.getName());
+            book.setModificationDate(sdf.format(new Date()));
             bookService.save(book);
         });
         ResultStatus resultStatus = new ResultStatus();
@@ -214,13 +288,20 @@ public class BookController {
      * @return
      */
     @PostMapping("/searchBook")
-    public ResponseEntity<?> searchBook(@RequestBody SearchDTO searchDTO) {
+    public ResponseEntity<?> searchBook(@RequestBody SearchDTO searchDTO, HttpSession session) {
+
+        final Member member = (Member) session.getAttribute("member");
+        ResultStatus resultStatus = new ResultStatus();
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[searchBook]");
+        }
+
         List<Book> bookList = bookService.findBook(searchDTO);
         final List<BookDTO> bookDTOList = bookList.stream()
                 .map(BookController::constructBookDTO)
                 .sorted(Comparator.comparing(BookDTO::getCreationDate).reversed())
                 .toList();
-        ResultStatus resultStatus = new ResultStatus();
+
         resultStatus.setCode("C000");
         resultStatus.setMessage("成功");
         resultStatus.setData(bookDTOList);
@@ -229,7 +310,13 @@ public class BookController {
 
 
     @GetMapping("/getVideoId/{bookId}")
-    public ResponseEntity<?> getVideoId(@PathVariable String bookId) {
+    public ResponseEntity<?> getVideoId(@PathVariable String bookId, HttpSession session) {
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[getVideoId]");
+        }
+
         ResultStatus resultStatus = new ResultStatus();
         final Optional<Book> opt = bookService.findById(bookId);
         if (opt.isEmpty()) {
@@ -239,6 +326,7 @@ public class BookController {
             final Book book = opt.get();
             Video video = new Video();
             video.setSourceBookId(book.getId());
+            video.setMemberId(member.getId());
             Video savedVideo = videoService.save(video);
             resultStatus.setCode("C000");
             resultStatus.setMessage("成功");
@@ -249,7 +337,13 @@ public class BookController {
 
 
     @PostMapping("/constructVideo")
-    public ResponseEntity<?> constructVideo(@RequestBody VideoRequestDTO dto) {
+    public ResponseEntity<?> constructVideo(@RequestBody VideoRequestDTO dto, HttpSession session) {
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[constructVideo]");
+        }
+
         ResultStatus resultStatus = new ResultStatus();
         final Optional<Book> opt = bookService.findById(dto.getBookId());
         if (opt.isEmpty()) {
@@ -263,6 +357,7 @@ public class BookController {
             narrationMsgDTO.setBookId(dto.getBookId());
             narrationMsgDTO.setVideoId(dto.getVideoId());
             narrationMsgDTO.setBookName(book.getTitle());
+            narrationMsgDTO.setMemberId(member.getId());
             rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.llm", narrationMsgDTO);
             resultStatus.setCode("C000");
             resultStatus.setMessage("成功");
@@ -273,9 +368,14 @@ public class BookController {
 
 
     @GetMapping("/previewBook/{bookId}")
-    public ResponseEntity<?> bookStatus (@PathVariable String bookId){
-        ResultStatus resultStatus = new ResultStatus();
+    public ResponseEntity<?> bookStatus (@PathVariable String bookId, HttpSession session){
 
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[previewBook]");
+        }
+
+        ResultStatus resultStatus = new ResultStatus();
         final Optional<Book> bookOpt = bookService.findById(bookId);
         if (bookOpt.isEmpty()) {
             resultStatus.setCode("C001");
@@ -283,34 +383,8 @@ public class BookController {
         } else {
             Optional<Video> videoOpt = videoService.findBySourceBookId(bookId);
             if (videoOpt.isEmpty()) {
-
                 resultStatus.setCode("C005");
                 resultStatus.setMessage("尚未生成試閱影片");
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                ResponseEntity<ResultStatus<String>> response = restTemplate.exchange(
-                        configProperties.getGlobalDomain() + "getVideoId/" + bookId,
-                        HttpMethod.GET,
-                        new HttpEntity<>(headers),
-                        new ParameterizedTypeReference<>() {}
-                );
-
-                ResultStatus<String> responseResult = response.getBody();
-                if (responseResult != null && "C000".equals(responseResult.getCode())) {
-                    String videoId = responseResult.getData();
-
-                    VideoRequestDTO dto = new VideoRequestDTO();
-                    dto.setBookId(bookId);
-                    dto.setVideoId(videoId);
-
-                    restTemplate.postForEntity(
-                            configProperties.getGlobalDomain() + "constructVideo",
-                            new HttpEntity<>(dto),
-                            Void.class
-                    );
-                }
-
             } else {
                 final Video video = videoOpt.get();
                 if (StringUtils.isBlank(video.getPath()) && StringUtils.isNotBlank(video.getError())) {
@@ -333,7 +407,13 @@ public class BookController {
 
 
     @GetMapping("/getPreviewStatus")
-    public ResponseEntity<?> getPreviewStatus (){
+    public ResponseEntity<?> getPreviewStatus (HttpSession session){
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[getPreviewStatus]");
+        }
+
         ResultStatus resultStatus = new ResultStatus();
         List<Video> videoList = videoService.findByDeletionDateIsNull();
         final List<String> InProcessBookIds = videoList.stream()
@@ -347,6 +427,34 @@ public class BookController {
     }
 
 
+
+    @GetMapping("/changeBookType/{id}")
+    public ResponseEntity<?> changeBookType (@PathVariable String id, HttpSession session){
+
+        final Member member = (Member) session.getAttribute("member");
+        if (member != null) {
+            logger.info("[" + member.getName() + "]" + "[changeBookType]");
+        }
+
+        ResultStatus resultStatus = new ResultStatus();
+        final Optional<Book> bookOpt = bookService.findById(id);
+        if (bookOpt.isEmpty()) {
+            resultStatus.setCode("C001");
+            resultStatus.setMessage("查無書籍");
+        } else {
+            final Book book = bookOpt.get();
+            if ("DEMO".equals(book.getType())){
+                book.setType(null);
+            } else {
+                book.setType("DEMO");
+            }
+            resultStatus.setCode("C000");
+            resultStatus.setMessage("成功");
+        }
+        return ResponseEntity.ok(resultStatus);
+    }
+
+
     private static BookDTO constructBookDTO(Book book) {
         BookDTO dto = new BookDTO();
         dto.setTitle(book.getTitle());
@@ -354,6 +462,11 @@ public class BookController {
         dto.setPublisher(book.getPublisher());
         dto.setAuthor(book.getAuthor());
         dto.setCreationDate(book.getCreationDate());
+        dto.setType(book.getType());
+        dto.setMemberId(book.getMemberId());
+        dto.setCreator(book.getCreator());
+        dto.setModificationDate(book.getModificationDate());
+        dto.setModifier(book.getModifier());
         return dto;
     }
 

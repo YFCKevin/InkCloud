@@ -1,0 +1,81 @@
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="author" content="Untree.co" />
+    <meta property="og:title" content="一朵墨">
+    <meta property="og:description" content="「一朵墨」書籍管理系統是專為書籍管理而設計的全能平台。AI存書、書籍搜尋管理，並支援多介面協作。一朵墨讓書籍管理變得簡單高效。">
+    <meta property="og:image" content="images/favicon.png">
+    <meta property="og:url" content="https://www.gurula.cc/inkCloud/index.html">
+    <meta property="og:type" content="website">
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="icon" href="images/favicon.png" type="image/x-icon"/>
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+            rel="stylesheet"
+    />
+    <link href="css/tiny-slider.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet" />
+    <script src="js/deviceType.js"></script>
+    <style>
+        .login-image {
+            width: 300px; /* 設置寬度 */
+            height: 300px; /* 設置高度 */
+            border-radius: 50%; /* 使圖片圓形 */
+            object-fit: cover; /* 確保圖片保持比例 */
+        }
+    </style>
+    <title>一朵墨</title>
+</head>
+<body>
+
+    <!-- Start Header/Navigation -->
+    <nav
+            class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark"
+            arial-label="Furni navigation bar"
+    >
+        <div class="container">
+            <a class="navbar-brand" href="index.html">InkCloud</a>
+
+            <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarsFurni"
+                    aria-controls="navbarsFurni"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarsFurni">
+                <ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+                    <li class="nav-item active">
+<!--                        <a class="nav-link" href="index.html">首頁</a>-->
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- End Header/Navigation -->
+
+    <div class="inner" style="display: flex; align-items: center; height: 100vh; flex-direction: column; margin-top: 100px;">
+        <img src="images/favicon.png" alt="Login Image" class="login-image mb-5">
+        <div class="text-center mt-3">
+            <a href="oauth2/authorization/google" class="btn btn-secondary btn-block mb-3" style="width: 100%;">
+                Google 登入
+            </a>
+            <a href="oauth2/authorization/line" class="btn btn-block" style="width: 100%; background-color: #00B900; border: none;">
+                Line 登入
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

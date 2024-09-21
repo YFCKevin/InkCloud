@@ -6,7 +6,7 @@
 * License: https://creativecommons.org/licenses/by/3.0/
 */ -->
 <!DOCTYPE html>
-<html lang="en" xmlns:x-on="http://www.w3.org/1999/xhtml">
+<html lang="zh-TW" xmlns:x-on="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -65,6 +65,12 @@
             <li class="nav-item active">
               <a class="nav-link" href="index.html">首頁</a>
             </li>
+          </ul>
+          <ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
+            <li x-show="memberName != null" class="fw-bold text-white">
+              <span x-text="memberName"></span>
+            </li>
+            <li x-show="memberName == null"><a class="nav-link fw-bold text-white" href="login.html">登入</a></li>
           </ul>
         </div>
       </div>
@@ -147,6 +153,7 @@
                   <div class="d-flex gap-2">
                     <button
                       x-on:click="openEditBook(item.id, item.title, item.author, item.publisher)"
+                      x-show="item.type != 'DEMO'"
                       class="btn btn-sm btn-primary"
                       style="padding: 12px 18px;"
                     >
@@ -154,6 +161,7 @@
                     </button>
                     <button
                       x-on:click="openDeleteBook(item.id)"
+                      x-show="item.type != 'DEMO'"
                       class="btn btn-sm btn-danger"
                       style="padding: 12px 18px;"
                     >
@@ -284,8 +292,8 @@
     </div>
 
 
-    <script src="js/videojs-chromecast.min.js"></script>
     <script src="js/video.min.js"></script>
+    <script src="js/videojs-chromecast.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/tiny-slider.js"></script>
     <script src="js/custom.js"></script>
@@ -300,16 +308,14 @@
           total: "",
           bookData: [],
           bookIdList: [],
+          memberName: "",
 
           init() {
             let _this = this;
-            let data = {};
-            data.keyword = "";
             $.ajax({
-              url: "searchBook",
-              type: "post",
+              url: "bookcase",
+              type: "get",
               dataType: "json",
-              data: JSON.stringify(data),
               contentType: "application/json; charset=utf-8",
               success: function (response) {
                 if (response.code == "C000"){
@@ -327,6 +333,15 @@
                 if (response.code == "C000"){
                   _this.bookIdList = response.data;
                 }
+              },
+            });
+            $.ajax({
+              url: "memberInfo",
+              type: "get",
+              dataType: "json",
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                _this.memberName = response.name;
               },
             });
           },
@@ -361,6 +376,7 @@
 <!--				    window.scrollTo(0, 0); // 滾動到頁面頂部-->
           },
           upload() {
+            this.loginVerification();
             const imageInput = document.getElementById("imageInput");
             imageInput.click();
 
@@ -407,6 +423,7 @@
             );
           },
           sendImages(imageRequests) {
+            this.loginVerification();
             let _this = this;
             $.ajax({
               url: "saveMultiBook",
@@ -445,6 +462,7 @@
             });
           },
           openEditBook(id, title, author, publisher) {
+            this.loginVerification();
             let _this = this;
             Swal.fire({
               title: '編輯書本資料',
@@ -485,6 +503,7 @@
             });
           },
           editBook(id, title, author, publisher){
+            this.loginVerification();
             let _this = this;
             let data = {};
             data.id = id;
@@ -515,6 +534,7 @@
             });
           },
           openDeleteBook(id){
+            this.loginVerification();
 			let _this = this;
 			Swal.fire({
 			  title: '確認要刪除？',
@@ -534,6 +554,7 @@
 			});
           },
           deleteBook(id) {
+            this.loginVerification();
             let _this = this;
             $.ajax({
               url: "deleteBook/" + id,
@@ -575,12 +596,58 @@
               },
             });
           },
-          preview (bookId){
+          getVideoId (bookId){
             let _this = this;
+            $.ajax({
+              url: "getVideoId/" + bookId,
+              type: "get",
+              dataType: "json",
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  const videoId = response.data;
+                  _this.constructVideo(bookId, videoId);
+                }
+              },
+            });
+          },
+          constructVideo (bookId, videoId){
             let button = $(event.currentTarget);
             let loadingIcon = button.find(".loadingIcon");
             let buttonText = button.find(".buttonText");
 
+            let data = {};
+            data.bookId = bookId;
+            data.videoId = videoId;
+            $.ajax({
+              url: "constructVideo",
+              type: "post",
+              dataType: "json",
+              data: JSON.stringify(data),
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  //影片製作中
+                  loadingIcon.show();
+                  buttonText.hide();
+                  Swal.fire({
+                    title: "試閱影片製作中，請稍候...",
+                    icon: "info",
+                    confirmButtonText: "關閉",
+                    customClass: {
+                      confirmButton: "btn btn-primary",
+                    },
+                  });
+                }
+              },
+            });
+          },
+          preview (bookId){
+            let button = $(event.currentTarget);
+            let loadingIcon = button.find(".loadingIcon");
+            let buttonText = button.find(".buttonText");
+
+            let _this = this;
             $.ajax({
               url: "previewBook/" + bookId,
               type: "get",
@@ -591,18 +658,23 @@
                   //播放影片
                   $("#videoModal").modal('show');
                   _this.initVideojs(response.data, 'videoTag');
-                } else if (response.code == "C005" || response.code == "C004"){
-                  //影片製作中
+                } else if (response.code == "C004"){
                   loadingIcon.show();
                   buttonText.hide();
                   Swal.fire({
-                    title: "試閱影片加載中，請60秒後再次點擊試閱",
+                    title: "試閱影片加載中，請稍候...",
                     icon: "info",
                     confirmButtonText: "關閉",
                     customClass: {
                       confirmButton: "btn btn-primary",
                     },
                   });
+                } else if (response.code == "C005"){
+                  if (_this.loginVerification()) {
+                    loadingIcon.show();
+                    buttonText.hide();
+                    _this.getVideoId(bookId);
+                  }
                 } else if (response.code == "C003"){
                   Swal.fire({
                     title: "系統錯誤，請聯繫管理員...",
@@ -657,6 +729,13 @@
             if (!videojs('videoTag').paused()) {
               videojs('videoTag').pause();
             }
+          },
+          loginVerification() {
+            if (this.memberName == null) {
+              location.href = "login.html";
+              return false;
+            }
+            return true;
           },
         };
       }

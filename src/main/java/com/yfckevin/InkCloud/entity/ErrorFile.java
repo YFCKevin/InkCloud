@@ -10,6 +10,15 @@ public class ErrorFile {
     private String coverName;
     private String errorCode;
     private String errorMsg;
+    private String memberId;
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
 
     public String getId() {
         return id;

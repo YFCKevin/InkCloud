@@ -85,6 +85,7 @@ public class BookServiceImpl implements BookService{
     public List<Book> findBook(SearchDTO searchDTO) {
         final String keyword = searchDTO.getKeyword().trim();
         List<Criteria> orCriterias = new ArrayList<>();
+        List<Criteria> andCriterias = new ArrayList<>();
 
         Criteria criteria = Criteria.where("deletionDate").exists(false);
 
@@ -97,12 +98,25 @@ public class BookServiceImpl implements BookService{
             orCriterias.add(criteria_title);
         }
 
+        if (StringUtils.isNotBlank(searchDTO.getMemberId())) {
+            Criteria criteria_memberId = Criteria.where("memberId").is(searchDTO.getMemberId());
+            andCriterias.add(criteria_memberId);
+        }
+
         if(!orCriterias.isEmpty()) {
             criteria = criteria.orOperator(orCriterias.toArray(new Criteria[0]));
+        }
+        if(!andCriterias.isEmpty()) {
+            criteria = criteria.andOperator(andCriterias.toArray(new Criteria[0]));
         }
 
         Query query = new Query(criteria);
 
         return mongoTemplate.find(query, Book.class);
+    }
+
+    @Override
+    public List<Book> findByTypeAndDeletionDateIsNull(String type) {
+        return bookRepository.findByTypeAndDeletionDateIsNull(type);
     }
 }

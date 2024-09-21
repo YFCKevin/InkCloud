@@ -12,8 +12,45 @@ public class Book {
     private String publisher;   //出版社
     private String sourceCoverName;
     private String coverName;
+    private String memberId;
     private String creationDate;
+    private String creator;
+    private String modificationDate;
+    private String modifier;
     private String deletionDate;
+    private String type;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getModificationDate() {
+        return modificationDate;
+    }
+
+    public void setModificationDate(String modificationDate) {
+        this.modificationDate = modificationDate;
+    }
+
+    public String getModifier() {
+        return modifier;
+    }
+
+    public void setModifier(String modifier) {
+        this.modifier = modifier;
+    }
 
     public String getId() {
         return id;
@@ -77,5 +114,13 @@ public class Book {
 
     public void setCoverName(String coverName) {
         this.coverName = coverName;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
     }
 }

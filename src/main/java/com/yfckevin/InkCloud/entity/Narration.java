@@ -9,8 +9,17 @@ public class Narration {
     private String id;
     private String text;
     private String sourceBookId;    //哪一本書
+    private String memberId;
     private String creationDate;
     private String creator;
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
 
     public String getId() {
         return id;

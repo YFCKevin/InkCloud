@@ -4,6 +4,15 @@ public class SearchDTO {
     private String keyword;
     private String startDate;
     private String endDate;
+    private String memberId;
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
 
     public String getKeyword() {
         return keyword;
