@@ -85,6 +85,6 @@ public class Oauth2Controller {
             member = memberOpt.get();
         }
         session.setAttribute("member", member);
-        return "redirect:index.html";
+        return "redirect:" + configProperties.getGlobalDomain() + "index.html";
     }
 }

@@ -746,7 +746,7 @@ textarea {
 /* 桌機端 */
 @media (min-width: 768px) {
   #videoTag {
-    max-height: 70vh; /* 高度限制在視窗高度的 70% */
+    max-height: 50vh; /* 高度限制在視窗高度的 70% */
   }
 }
 

@@ -1,10 +1,10 @@
 package com.yfckevin.InkCloud.oauth;
 
+import com.yfckevin.InkCloud.ConfigProperties;
 import com.yfckevin.InkCloud.entity.Member;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -17,9 +17,11 @@ import java.io.IOException;
 public class OauthLoginSuccessHandler implements AuthenticationSuccessHandler {
     protected Logger logger = LoggerFactory.getLogger(OauthLoginSuccessHandler.class);
     private final UserService userService;
+    private final ConfigProperties configProperties;
 
-    public OauthLoginSuccessHandler(UserService userService) {
+    public OauthLoginSuccessHandler(UserService userService, ConfigProperties configProperties) {
         this.userService = userService;
+        this.configProperties = configProperties;
     }
 
     @Override
@@ -34,7 +36,7 @@ public class OauthLoginSuccessHandler implements AuthenticationSuccessHandler {
         //處理把第三方的帳號儲存到DB，Oauth2ClientName是GOOGLE、FACEBOOK、LINE.....
         Member member  = userService.processOAuthPostLogin(oauthUser.getEmail(),oauthUser.getName(),oauthUser.getOauth2ClientName());
         request.getSession().setAttribute("member", member);
-        response.sendRedirect("/inkCloud/index.html");
+        response.sendRedirect(configProperties.getGlobalDomain() + "index.html");
     }
 
 }

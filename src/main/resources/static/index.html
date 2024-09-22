@@ -67,10 +67,11 @@
             </li>
           </ul>
           <ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
-            <li x-show="memberName != null" class="fw-bold text-white">
-              <span x-text="memberName"></span>
+            <li x-show="memberName != null" style="display: flex; justify-content: center; align-items: center;">
+              <span class="fw-bold" style="color: yellow;" x-text="memberName"></span>
             </li>
-            <li x-show="memberName == null"><a class="nav-link fw-bold text-white" href="login.html">登入</a></li>
+            <li x-show="memberName == null"><a class="nav-link fw-bold" href="login.html">登入</a></li>
+            <li x-show="memberName != null"><a class="nav-link fw-bold" @click="logout()">登出</a></li>
           </ul>
         </div>
       </div>
@@ -736,6 +737,19 @@
               return false;
             }
             return true;
+          },
+          logout (){
+            $.ajax({
+              url: "logout",
+              type: "get",
+              dataType: "json",
+              contentType: "application/json; charset=utf-8",
+              success: function (response) {
+                if (response.code == "C000") {
+                  location.href = 'login.html';
+                }
+              },
+            });
           },
         };
       }
