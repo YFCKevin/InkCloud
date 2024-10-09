@@ -31,7 +31,7 @@
   - **資料庫：** MongoDB
   - **雲端部署：** Google Cloud
   - **消息隊列：** RabbitMQ
-  - **第三方 API：** openAI (gpt-4o-mini, DALL·E 2), Google OCR API, Google Vision API, Google ouath2 login, Line ouath2 login
+  - **第三方 API：** openAI (gpt-4o-mini, DALL·E 2), Google text-to-speech, Google Vision API, Google ouath2 login, Line ouath2 login
 <p align="center">
   <img src="https://github.com/YFCKevin/InkCloud/blob/main/architecture-diagram.png" width="100%" alt="架構圖">
 </p>
