@@ -17,7 +17,7 @@
     <meta property="og:title" content="一朵墨">
     <meta property="og:description" content="「一朵墨」書籍管理系統是專為書籍管理而設計的全能平台。AI存書、書籍搜尋管理，並支援多介面協作。一朵墨讓書籍管理變得簡單高效。">
     <meta property="og:image" content="images/favicon.png">
-    <meta property="og:url" content="https://www.gurula.cc/inkCloud/index.html">
+    <meta property="og:url" content="https://gurula.cc/inkCloud/index.html">
     <meta property="og:type" content="website">
     <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
     <link rel="icon" href="images/favicon.png" type="image/x-icon"/>
@@ -71,7 +71,7 @@
               <span class="fw-bold" style="color: yellow;" x-text="memberName"></span>
             </li>
             <li x-show="memberName == null"><a class="nav-link fw-bold" href="login.html">登入</a></li>
-            <li x-show="memberName != null"><a class="nav-link fw-bold" @click="logout()">登出</a></li>
+            <li x-show="memberName != null"><a class="nav-link fw-bold" x-on:click="logout()">登出</a></li>
           </ul>
         </div>
       </div>
@@ -177,7 +177,7 @@
                       <span class="loadingIcon" x-show="isLoading(item.id)" style="display: none;">
                         <i class="fa fa-spinner fa-spin"></i>
                       </span>
-                      <span class="buttonText" x-show="!isLoading(item.id)">試閱</span>
+                      <span class="buttonText" x-show="!isLoading(item.id)">試聽</span>
                     </button>
                   </div>
                 </div>
@@ -632,7 +632,7 @@
                   loadingIcon.show();
                   buttonText.hide();
                   Swal.fire({
-                    title: "試閱影片製作中，請稍候...",
+                    title: "試聽影片製作中，請稍候...",
                     icon: "info",
                     confirmButtonText: "關閉",
                     customClass: {
@@ -663,7 +663,7 @@
                   loadingIcon.show();
                   buttonText.hide();
                   Swal.fire({
-                    title: "試閱影片加載中，請稍候...",
+                    title: "試聽影片加載中，請稍候...",
                     icon: "info",
                     confirmButtonText: "關閉",
                     customClass: {
@@ -745,9 +745,7 @@
               dataType: "json",
               contentType: "application/json; charset=utf-8",
               success: function (response) {
-                if (response.code == "C000") {
-                  location.href = 'login.html';
-                }
+                location.reload();
               },
             });
           },
