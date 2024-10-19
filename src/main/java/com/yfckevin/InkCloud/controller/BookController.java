@@ -68,7 +68,7 @@ public class BookController {
         final Member member = (Member) session.getAttribute("member");
         ResultStatus resultStatus = new ResultStatus();
         if (member != null) {
-            logger.info("[" + member.getName() + "]" + "[searchBook]");
+            logger.info("[" + member.getName() + "]" + "[bookcase]");
         } else {
             final List<Book> demoBookList = bookService.findByTypeAndDeletionDateIsNull("DEMO");
             final List<BookDTO> bookDTOList = demoBookList.stream()

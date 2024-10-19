@@ -2,7 +2,9 @@ package com.yfckevin.InkCloud.entity;
 
 import com.yfckevin.InkCloud.enums.Provider;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "member")
 public class Member {
     @Id
     private String id;
