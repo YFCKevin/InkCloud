@@ -3,6 +3,7 @@ package com.yfckevin.InkCloud.config;
 import com.yfckevin.InkCloud.oauth.CustomOAuth2UserService;
 import com.yfckevin.InkCloud.oauth.OauthLoginFailureHandler;
 import com.yfckevin.InkCloud.oauth.OauthLoginSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,7 +34,10 @@ public class SecurityConfig {
 
         http.logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/index.html")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType("application/json");
+                })
                 .and().oauth2Login().userInfoEndpoint()
                 .userService(oauthUserService)
                 .and()
