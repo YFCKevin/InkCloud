@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .logoutSuccessHandler((request, response, authentication) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setContentType("application/json");
+                    response.getWriter().write("{\"message\": \"登出成功\"}");
                 })
                 .and().oauth2Login().userInfoEndpoint()
                 .userService(oauthUserService)
