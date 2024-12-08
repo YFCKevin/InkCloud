@@ -143,6 +143,15 @@ public class VideoServiceImpl implements VideoService{
         }
     }
 
+
+    @RabbitListener(queues = RabbitMQConfig.ERROR_QUEUE)
+    public void errorQueueHandler(WorkFlowDTO workFlowDTO) {
+        final String videoId = workFlowDTO.getVideoId();
+        final Video video = videoRepository.findById(videoId).get();
+        video.setError(workFlowDTO.getMsg());
+        videoRepository.save(video);
+    }
+
     @Override
     public Video save(Video video) {
         return videoRepository.save(video);

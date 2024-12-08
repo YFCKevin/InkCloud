@@ -177,17 +177,15 @@ public class OpenAiServiceImpl implements OpenAiService {
                 workFlowDTO.setCode("C999");
                 workFlowDTO.setMsg("旁白儲存失敗");
                 video.setError("旁白儲存失敗");
-                videoService.save(video);
                 logger.error("旁白儲存失敗，導向錯誤");
-                rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
+                rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.narration", workFlowDTO);
             }
         } else {
             workFlowDTO.setCode("C999");
             workFlowDTO.setMsg("openAI錯誤發生");
             video.setError("[旁白] openAI錯誤發生");
-            videoService.save(video);
             logger.error("[旁白] openAI錯誤發生，狀態碼：{}，導向錯誤", response.getStatusCode());
-            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.narration", workFlowDTO);
         }
     }
 
@@ -235,9 +233,8 @@ public class OpenAiServiceImpl implements OpenAiService {
                     workFlowDTO.setCode("C999");
                     workFlowDTO.setMsg("下載圖片時發生錯誤");
                     video.setError("下載圖片時發生錯誤");
-                    videoService.save(video);
                     logger.error("下載圖片時發生錯誤: {}", e.getMessage());
-                    rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
+                    rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.image", workFlowDTO);
                 }
             }
 
@@ -262,18 +259,16 @@ public class OpenAiServiceImpl implements OpenAiService {
                 workFlowDTO.setCode("C999");
                 workFlowDTO.setMsg("圖片儲存失敗");
                 video.setError("圖片儲存失敗");
-                videoService.save(video);
                 logger.error("圖片儲存失敗，導向錯誤");
-                rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
+                rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.image", workFlowDTO);
             }
 
         } else {
             workFlowDTO.setCode("C999");
             workFlowDTO.setMsg("openAI錯誤發生");
             video.setError("[產圖] openAI錯誤發生");
-            videoService.save(video);
             logger.error("openAI錯誤發生，狀態碼：{}，導向錯誤", response.getStatusCode());
-            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "workflow.error", workFlowDTO);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.image", workFlowDTO);
         }
     }
 

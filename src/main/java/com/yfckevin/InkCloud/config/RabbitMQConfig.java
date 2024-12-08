@@ -17,11 +17,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
     private final ConfigProperties configProperties;
-    public static final String LLM_QUEUE = "llm-queue";
-    public static final String AUDIO_QUEUE = "audio-queue";
-    public static final String IMAGE_QUEUE = "image-queue";
-    public static final String VIDEO_QUEUE = "video-queue";
-    public static final String ERROR_QUEUE = "error-queue";
+    public static final String LLM_QUEUE = "llm.queue";
+    public static final String AUDIO_QUEUE = "audio.queue";
+    public static final String IMAGE_QUEUE = "image.queue";
+    public static final String VIDEO_QUEUE = "video.queue";
+    public static final String ERROR_QUEUE = "error.queue";
     public static final String WORKFLOW_EXCHANGE = "workflow-exchange";
 
     public RabbitMQConfig(ConfigProperties configProperties) {
@@ -52,27 +52,27 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue errorQueue() {
-        return new Queue(ERROR_QUEUE, false);
+        return new Queue(ERROR_QUEUE, true);
     }
 
     @Bean
     public Queue llmQueue() {
-        return new Queue(LLM_QUEUE, false);
+        return new Queue(LLM_QUEUE, true);
     }
 
     @Bean
     public Queue audioQueue() {
-        return new Queue(AUDIO_QUEUE, false);
+        return new Queue(AUDIO_QUEUE, true);
     }
 
     @Bean
     public Queue imageQueue() {
-        return new Queue(IMAGE_QUEUE, false);
+        return new Queue(IMAGE_QUEUE, true);
     }
 
     @Bean
     public Queue videoQueue() {
-        return new Queue(VIDEO_QUEUE, false);
+        return new Queue(VIDEO_QUEUE, true);
     }
 
     @Bean
