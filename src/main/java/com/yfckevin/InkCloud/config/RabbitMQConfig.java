@@ -8,6 +8,8 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.retry.MessageRecoverer;
+import org.springframework.amqp.rabbit.retry.RepublishMessageRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,6 +25,7 @@ public class RabbitMQConfig {
     public static final String VIDEO_QUEUE = "video.queue";
     public static final String ERROR_QUEUE = "error.queue";
     public static final String WORKFLOW_EXCHANGE = "workflow-exchange";
+    public static final String ERROR_EXCHANGE = "error-exchange";
 
     public RabbitMQConfig(ConfigProperties configProperties) {
         this.configProperties = configProperties;
@@ -81,27 +84,38 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding bindingErrorQueue(@Qualifier("errorQueue") Queue errorQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(errorQueue).to(exchange).with("error.#");
+    public TopicExchange errorExchange() {
+        return new TopicExchange(ERROR_EXCHANGE);
+    }
+
+    // 配置失敗重試策略：將失敗策略改為RepublishMessageRecoverer
+    @Bean
+    public MessageRecoverer messageRecoverer(RabbitTemplate rabbitTemplate) {
+        return new RepublishMessageRecoverer(rabbitTemplate, ERROR_EXCHANGE, "error.#");
     }
 
     @Bean
-    public Binding bindingLLM(@Qualifier("llmQueue") Queue llmQueue, TopicExchange exchange) {
+    public Binding bindingError(@Qualifier("errorQueue") Queue errorQueue, @Qualifier("errorExchange") TopicExchange errorExchange) {
+        return BindingBuilder.bind(errorQueue).to(errorExchange).with("error.#");
+    }
+
+    @Bean
+    public Binding bindingLLM(@Qualifier("llmQueue") Queue llmQueue, @Qualifier("exchange") TopicExchange exchange) {
         return BindingBuilder.bind(llmQueue).to(exchange).with("workflow.llm");
     }
 
     @Bean
-    public Binding bindingAudio(@Qualifier("audioQueue") Queue audioQueue, TopicExchange exchange) {
+    public Binding bindingAudio(@Qualifier("audioQueue") Queue audioQueue, @Qualifier("exchange") TopicExchange exchange) {
         return BindingBuilder.bind(audioQueue).to(exchange).with("workflow.audio");
     }
 
     @Bean
-    public Binding bindingImage(@Qualifier("imageQueue") Queue imageQueue, TopicExchange exchange) {
+    public Binding bindingImage(@Qualifier("imageQueue") Queue imageQueue, @Qualifier("exchange") TopicExchange exchange) {
         return BindingBuilder.bind(imageQueue).to(exchange).with("workflow.image");
     }
 
     @Bean
-    public Binding bindingVideo(@Qualifier("videoQueue") Queue videoQueue, TopicExchange exchange) {
+    public Binding bindingVideo(@Qualifier("videoQueue") Queue videoQueue, @Qualifier("exchange") TopicExchange exchange) {
         return BindingBuilder.bind(videoQueue).to(exchange).with("workflow.video");
     }
 }

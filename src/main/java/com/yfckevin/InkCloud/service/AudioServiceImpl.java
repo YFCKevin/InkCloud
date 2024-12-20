@@ -109,14 +109,14 @@ public class AudioServiceImpl implements AudioService{
                             workFlowDTO.setMsg("音訊儲存失敗");
                             video.setError("音訊儲存失敗");
                             logger.error("音訊儲存失敗，導向錯誤");
-                            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.audio", workFlowDTO);
+                            rabbitTemplate.convertAndSend(RabbitMQConfig.ERROR_EXCHANGE, "error.audio", workFlowDTO);
                         }
                     } catch (Exception e) {
                         workFlowDTO.setCode("C999");
                         workFlowDTO.setMsg("保存音訊時發生錯誤");
                         video.setError("保存音訊時發生錯誤");
                         logger.error("保存音訊時發生錯誤: {}", e.getMessage());
-                        rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.audio", workFlowDTO);
+                        rabbitTemplate.convertAndSend(RabbitMQConfig.ERROR_EXCHANGE, "error.audio", workFlowDTO);
                     }
                 }
             }
@@ -125,7 +125,7 @@ public class AudioServiceImpl implements AudioService{
             workFlowDTO.setMsg(e.getMessage());
             video.setError("[音訊] google發生錯誤");
             logger.error(e.getMessage(), e);
-            rabbitTemplate.convertAndSend(RabbitMQConfig.WORKFLOW_EXCHANGE, "error.audio", workFlowDTO);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.ERROR_EXCHANGE, "error.audio", workFlowDTO);
         }
     }
 }
