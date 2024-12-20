@@ -1,0 +1,117 @@
+server:
+  port: 8100
+  servlet:
+    contextPath: /inkCloud
+  error:
+    whitelabel:
+      enabled: false
+spring:
+  application:
+    name: Ink_Cloud
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+  resources:
+    static-locations: file:/Users/chenyifan/Documents/workspace-fan/InkCloud/static/
+  thymeleaf:
+    mode: HTML
+    encoding: UTF-8
+    cache: true
+    prefix: file:/Users/chenyifan/Documents/workspace-fan/InkCloud/templates/
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${mail-username}
+    password: ${mail-password}
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  security:
+    user:
+      name: ${db-username}
+      password: ${db-password}
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: http://localhost:8100/inkCloud/login/oauth2/code/google
+            client-id: ${google-client-id}
+            client-secret: ${google-client-secret}
+            scope:
+              - email
+              - profile
+          line:
+            client-id: ${line-client-id}
+            client-secret: ${line-client-secret}
+            redirect-uri: https://gurula.cc/inkCloud/callback
+            scope:
+              - openid
+              - profile
+            authorization-grant-type: authorization_code
+        provider:
+          line:
+            authorization-uri: https://access.line.me/oauth2/v2.1/authorize
+            token-uri: https://api.line.me/oauth2/v2.1/token
+            user-info-uri: https://api.line.me/v2/profile
+            user-name-attribute: userId
+  data:
+    mongodb:
+      uri: mongodb://${db-username}:${db-password}@localhost:27017
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${db-username}
+    password: ${db-password}
+    listener:
+      simple:
+        prefetch: 1 #當多個消費者訂閱同一個Queue時，確保每個消費者最多處理一條Msg，而不是某些消費者堆積大量消息。
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          multiplier: 1
+          max-attempts: 1
+          stateless: true
+    connection-timeout: 1s
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000ms
+        multiplier: 1
+        max-attempts: 3
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate: INFO
+
+config:
+  jsonPath: /Users/chenyifan/Documents/workspace-fan/InkCloud/src/main/resources/static/js/
+  globalDomain: http://localhost:8100/inkCloud/
+  picSavePath: /Users/chenyifan/Documents/workspace-fan/InkCloud/InkCloud_images/
+  aiPicSavePath: /Users/chenyifan/Documents/workspace-fan/InkCloud/ai_images/
+  picShowPath: http://localhost:8100/inkCloud/InkCloud_images/
+  aiPicShowPath: http://localhost:8100/inkCloud/ai_images/
+  fileSavePath: /Users/chenyifan/Documents/workspace-fan/InkCloud/InkCloud_files/
+  fileShowPath: http://localhost:8100/inkCloud/InkCloud_files/
+  videoSavePath: /Users/chenyifan/Documents/workspace-fan/InkCloud/InkCloud_files/video/
+  videoShowPath: http://localhost:8100/inkCloud/video/
+  audioSavePath: /Users/chenyifan/Documents/workspace-fan/InkCloud/InkCloud_files/audio/
+  apiKey: ${openai-api-key}
+
+jwt:
+  location: gurula.jks
+  alias: gurula
+  password: gurula
+  tokenTTL: 20m

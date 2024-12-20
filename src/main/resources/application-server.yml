@@ -1,0 +1,110 @@
+server:
+  port: 8083
+  servlet:
+    contextPath: /inkCloud
+  error:
+    whitelabel:
+      enabled: false
+spring:
+  application:
+    name: Ink_Cloud
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+  resources:
+    static-locations: file:/opt/InkCloud/static/
+  thymeleaf:
+    mode: HTML
+    encoding: UTF-8
+    cache: true
+    prefix: file:/opt/InkCloud/templates/
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${mail-username}
+    password: ${mail-password}
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  security:
+    user:
+      name: ${db-username}
+      password: ${db-password}
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: https://gurula.cc/inkCloud/login/oauth2/code/google
+            client-id: ${google-client-id}
+            client-secret: ${google-client-secret}
+            scope:
+              - email
+              - profile
+          line:
+            client-id: ${line-client-id}
+            client-secret: ${line-client-secret}
+            redirect-uri: https://gurula.cc/inkCloud/callback
+            scope:
+              - openid
+              - profile
+            authorization-grant-type: authorization_code
+        provider:
+          line:
+            authorization-uri: https://access.line.me/oauth2/v2.1/authorize
+            token-uri: https://api.line.me/oauth2/v2.1/token
+            user-info-uri: https://api.line.me/v2/profile
+            user-name-attribute: userId
+  data:
+    mongodb:
+      uri: mongodb://${db-username}:${db-password}@localhost:27017
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${db-username}
+    password: ${db-password}
+    listener:
+      simple:
+        prefetch: 1 #當多個消費者訂閱同一個Queue時，確保每個消費者最多處理一條Msg，而不是某些消費者堆積大量消息。
+    connection-timeout: 1s
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000ms
+        multiplier: 1
+        max-attempts: 3
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate: DEBUG
+
+config:
+  jsonPath: /opt/InkCloud/static/js/
+  globalDomain: https://gurula.cc/inkCloud/
+  picSavePath: /opt/InkCloud/InkCloud_images/
+  aiPicSavePath: /opt/InkCloud/ai_images/
+  picShowPath: https://gurula.cc/inkCloud/InkCloud_images/
+  aiPicShowPath: https://gurula.cc/inkCloud/ai_images/
+  fileSavePath: /opt/InkCloud/InkCloud_files/
+  fileShowPath: https://gurula.cc/inkCloud/InkCloud_files/
+  videoSavePath: /opt/InkCloud/InkCloud_files/video/
+  videoShowPath: https://gurula.cc/inkCloud/video/
+  audioSavePath: /opt/InkCloud/InkCloud_files/audio/
+  apiKey: ${openai-api-key}
+
+jwt:
+  location: gurula.jks
+  alias: gurula
+  password: gurula
+  tokenTTL: 20m
