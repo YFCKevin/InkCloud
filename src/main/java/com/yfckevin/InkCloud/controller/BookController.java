@@ -62,8 +62,8 @@ public class BookController {
     }
 
 
-    @GetMapping("/bookcase")
-    public ResponseEntity<?> bookcase (HttpSession session){
+    @GetMapping("/bookcase/{memberId}")
+    public ResponseEntity<?> bookcase(@PathVariable(required = false) String memberId, HttpSession session) {
 
         final Member member = (Member) session.getAttribute("member");
         ResultStatus resultStatus = new ResultStatus();
@@ -82,6 +82,9 @@ public class BookController {
         }
         SearchDTO searchDTO = new SearchDTO();
         searchDTO.setKeyword("");
+        if (StringUtils.isNotBlank(memberId)) {
+            searchDTO.setMemberId(memberId);
+        }
         List<Book> bookList = bookService.findBook(searchDTO);
         final List<Book> demoBookList = bookService.findByTypeAndDeletionDateIsNull("DEMO");
         bookList.addAll(demoBookList);
@@ -232,8 +235,8 @@ public class BookController {
      * @param id
      * @return
      */
-    @DeleteMapping("/deleteBook/{id}")
-    public ResponseEntity<?> deleteBook(@PathVariable String id, HttpSession session) {
+    @DeleteMapping("/deleteBook/{id}/{memberId}")
+    public ResponseEntity<?> deleteBook(@PathVariable String id, @PathVariable String memberId, HttpSession session) {
 
         final Member member = (Member) session.getAttribute("member");
         if (member != null) {
@@ -241,14 +244,23 @@ public class BookController {
         }
 
         ResultStatus resultStatus = new ResultStatus();
-        bookService.findById(id)
-                .ifPresent(
-                        book -> {
-                            book.setDeletionDate(sdf.format(new Date()));
-                            bookService.save(book);
-                        });
-        resultStatus.setCode("C000");
-        resultStatus.setMessage("成功");
+
+        if (StringUtils.isNotBlank(memberId)) {
+            bookService.findByIdAndMemberId(id, memberId).ifPresentOrElse(
+                    book -> {
+                        book.setDeletionDate(sdf.format(new Date()));
+                        bookService.save(book);
+                        resultStatus.setCode("C000");
+                        resultStatus.setMessage("成功");
+                    }, () -> {
+                        resultStatus.setCode("C001");
+                        resultStatus.setMessage("查無書籍");
+                    });
+        } else {
+            resultStatus.setCode("C006");
+            resultStatus.setMessage("查無會員");
+        }
+
         return ResponseEntity.ok(resultStatus);
     }
 
@@ -266,17 +278,27 @@ public class BookController {
             logger.info("[" + member.getName() + "]" + "[editBook]");
         }
 
-        bookService.findById(bookDTO.getId()).ifPresent(book -> {
-            book.setTitle(bookDTO.getTitle());
-            book.setAuthor(bookDTO.getAuthor());
-            book.setPublisher(bookDTO.getPublisher());
-            book.setModifier(member.getName());
-            book.setModificationDate(sdf.format(new Date()));
-            bookService.save(book);
-        });
         ResultStatus resultStatus = new ResultStatus();
-        resultStatus.setCode("C000");
-        resultStatus.setMessage("成功");
+
+        if (StringUtils.isNotBlank(bookDTO.getMemberId())) {
+            bookService.findByIdAndMemberId(bookDTO.getId(), bookDTO.getMemberId()).ifPresentOrElse(book -> {
+                book.setTitle(bookDTO.getTitle());
+                book.setAuthor(bookDTO.getAuthor());
+                book.setPublisher(bookDTO.getPublisher());
+                book.setModifier(member.getName());
+                book.setModificationDate(sdf.format(new Date()));
+                bookService.save(book);
+                resultStatus.setCode("C000");
+                resultStatus.setMessage("成功");
+            }, () -> {
+                resultStatus.setCode("C001");
+                resultStatus.setMessage("查無書籍");
+            });
+        } else {
+            resultStatus.setCode("C006");
+            resultStatus.setMessage("查無會員");
+        }
+
         return ResponseEntity.ok(resultStatus);
     }
 
@@ -297,8 +319,25 @@ public class BookController {
         }
 
         List<Book> bookList = bookService.findBook(searchDTO);
+        if (StringUtils.isBlank(searchDTO.getKeyword())) {
+            final List<Book> demoBookList = bookService.findByTypeAndDeletionDateIsNull("DEMO");
+            bookList.addAll(demoBookList);
+        }
         final List<BookDTO> bookDTOList = bookList.stream()
-                .map(BookController::constructBookDTO)
+                .collect(Collectors.toMap(
+                        Book::getId,
+                        BookController::constructBookDTO,
+                        (existing, replacement) -> {
+                            if ("DEMO".equals(replacement.getType())) {
+                                return replacement;
+                            }
+                            if ("DEMO".equals(existing.getType())) {
+                                return existing;
+                            }
+                            return existing;
+                        }
+                ))
+                .values().stream()
                 .sorted(Comparator.comparing(BookDTO::getCreationDate).reversed())
                 .toList();
 
@@ -366,9 +405,8 @@ public class BookController {
     }
 
 
-
     @GetMapping("/previewBook/{bookId}")
-    public ResponseEntity<?> bookStatus (@PathVariable String bookId, HttpSession session){
+    public ResponseEntity<?> bookStatus(@PathVariable String bookId, HttpSession session) {
 
         final Member member = (Member) session.getAttribute("member");
         if (member != null) {
@@ -407,7 +445,7 @@ public class BookController {
 
 
     @GetMapping("/getPreviewStatus")
-    public ResponseEntity<?> getPreviewStatus (HttpSession session){
+    public ResponseEntity<?> getPreviewStatus(HttpSession session) {
 
         final Member member = (Member) session.getAttribute("member");
         if (member != null) {
@@ -427,9 +465,8 @@ public class BookController {
     }
 
 
-
     @GetMapping("/changeBookType/{id}")
-    public ResponseEntity<?> changeBookType (@PathVariable String id, HttpSession session){
+    public ResponseEntity<?> changeBookType(@PathVariable String id, HttpSession session) {
 
         final Member member = (Member) session.getAttribute("member");
         if (member != null) {
@@ -443,7 +480,7 @@ public class BookController {
             resultStatus.setMessage("查無書籍");
         } else {
             final Book book = bookOpt.get();
-            if ("DEMO".equals(book.getType())){
+            if ("DEMO".equals(book.getType())) {
                 book.setType(null);
             } else {
                 book.setType("DEMO");

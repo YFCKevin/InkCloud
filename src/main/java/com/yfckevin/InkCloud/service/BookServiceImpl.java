@@ -119,4 +119,9 @@ public class BookServiceImpl implements BookService{
     public List<Book> findByTypeAndDeletionDateIsNull(String type) {
         return bookRepository.findByTypeAndDeletionDateIsNull(type);
     }
+
+    @Override
+    public Optional<Book> findByIdAndMemberId(String id, String memberId) {
+        return bookRepository.findByIdAndMemberId(id, memberId);
+    }
 }

@@ -310,21 +310,36 @@
           bookData: [],
           bookIdList: [],
           memberName: "",
+          memberId: "",
 
-          init() {
+          async init() {
             let _this = this;
-            $.ajax({
-              url: "bookcase",
-              type: "get",
-              dataType: "json",
-              contentType: "application/json; charset=utf-8",
-              success: function (response) {
-                if (response.code == "C000"){
-                  _this.pageNumber = 0;
-                  _this.bookData = response.data;
-                }
-              },
-            });
+            try {
+              const memberInfoResponse = await $.ajax({
+                url: "memberInfo",
+                type: "get",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+              });
+
+              this.memberName = memberInfoResponse.name;
+              this.memberId = memberInfoResponse.id;
+
+              const bookcaseResponse = await $.ajax({
+                url: "bookcase/" + this.memberId,
+                type: "get",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+              });
+
+              if (bookcaseResponse.code == "C000") {
+                this.pageNumber = 0;
+                this.bookData = bookcaseResponse.data;
+              }
+            } catch (error) {
+              console.error("Error in init:", error);
+            }
+
             $.ajax({
               url: "getPreviewStatus",
               type: "get",
@@ -334,15 +349,6 @@
                 if (response.code == "C000"){
                   _this.bookIdList = response.data;
                 }
-              },
-            });
-            $.ajax({
-              url: "memberInfo",
-              type: "get",
-              dataType: "json",
-              contentType: "application/json; charset=utf-8",
-              success: function (response) {
-                _this.memberName = response.name;
               },
             });
           },
@@ -511,6 +517,7 @@
             data.title = title;
             data.author = author;
             data.publisher = publisher;
+            data.memberId = _this.memberId;
 
             $.ajax({
               url: "editBook",
@@ -558,7 +565,7 @@
             this.loginVerification();
             let _this = this;
             $.ajax({
-              url: "deleteBook/" + id,
+              url: "deleteBook/" + id + "/" + _this.memberId,
               type: "delete",
               dataType: "json",
               contentType: "application/json; charset=utf-8",
@@ -583,6 +590,7 @@
             let data = {};
             let keyword = $("#keyword").val();
             data.keyword = keyword;
+            data.memberId = this.memberId;
             $.ajax({
               url: "searchBook",
               type: "post",

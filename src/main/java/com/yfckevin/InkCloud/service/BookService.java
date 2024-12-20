@@ -19,4 +19,6 @@ public interface BookService {
     List<Book> findBook(SearchDTO searchDTO);
 
     List<Book> findByTypeAndDeletionDateIsNull(String type);
+
+    Optional<Book> findByIdAndMemberId(String id, String memberId);
 }
