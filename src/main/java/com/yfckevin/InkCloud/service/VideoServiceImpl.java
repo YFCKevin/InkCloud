@@ -1,28 +1,22 @@
 package com.yfckevin.InkCloud.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yfckevin.InkCloud.ConfigProperties;
 import com.yfckevin.InkCloud.config.RabbitMQConfig;
+import com.yfckevin.InkCloud.dto.NoticeDTO;
 import com.yfckevin.InkCloud.dto.WorkFlowDTO;
-import com.yfckevin.InkCloud.entity.Audio;
-import com.yfckevin.InkCloud.entity.Narration;
 import com.yfckevin.InkCloud.entity.Video;
 import com.yfckevin.InkCloud.exception.ResultStatus;
 import com.yfckevin.InkCloud.repository.VideoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -32,11 +26,13 @@ public class VideoServiceImpl implements VideoService{
     private final VideoRepository videoRepository;
     private final ConfigProperties configProperties;
     private final SimpleDateFormat sdf;
+    private final RabbitTemplate rabbitTemplate;
 
-    public VideoServiceImpl(VideoRepository videoRepository, ConfigProperties configProperties, @Qualifier("sdf") SimpleDateFormat sdf) {
+    public VideoServiceImpl(VideoRepository videoRepository, ConfigProperties configProperties, @Qualifier("sdf") SimpleDateFormat sdf, RabbitTemplate rabbitTemplate) {
         this.videoRepository = videoRepository;
         this.configProperties = configProperties;
         this.sdf = sdf;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -120,6 +116,18 @@ public class VideoServiceImpl implements VideoService{
                     resultStatus.setCode("C000");
                     resultStatus.setMessage("成功");
                     logger.info("影片製作完成");
+
+                    NoticeDTO noticeDTO = new NoticeDTO();
+                    noticeDTO.setMessage("您的書籍 [" + workFlowDTO.getBookName() + "] 試聽影片製作完成，歡迎點擊試聽！");
+                    noticeDTO.setMemberId(video.getMemberId());
+                    rabbitTemplate.convertAndSend(RabbitMQConfig.DELAY_EXCHANGE,
+                            "notice.video",
+                            noticeDTO,
+                            message -> {
+                                message.getMessageProperties().setDelay(1000);
+                                return message;
+                            }
+                    );
                 } else {
                     resultStatus.setCode("C999");
                     resultStatus.setMessage("FFmpeg失敗");

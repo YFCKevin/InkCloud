@@ -17,12 +17,10 @@ import com.yfckevin.InkCloud.exception.ResultStatus;
 import com.yfckevin.InkCloud.service.*;
 import jakarta.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.regexp.RE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -34,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @RestController
@@ -224,6 +223,19 @@ public class BookController {
                 "successCount", successCount.get(),
                 "errorCount", errorCount.get()
         ));
+
+
+        NoticeDTO noticeDTO = new NoticeDTO();
+        noticeDTO.setMessage("您成功匯入" + successCount.get() + "本書！");
+        noticeDTO.setMemberId(member.getId());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.DELAY_EXCHANGE,
+                "notice.save.book",
+                noticeDTO,
+                message -> {
+                    message.getMessageProperties().setDelay(1000);
+                    return message;
+                }
+        );
 
         return ResponseEntity.ok(resultStatus);
     }

@@ -1,10 +1,7 @@
 package com.yfckevin.InkCloud.config;
 
 import com.yfckevin.InkCloud.ConfigProperties;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -24,8 +21,11 @@ public class RabbitMQConfig {
     public static final String IMAGE_QUEUE = "image.queue";
     public static final String VIDEO_QUEUE = "video.queue";
     public static final String ERROR_QUEUE = "error.queue";
+    public static final String DELAY_QUEUE = "delay.queue";
     public static final String WORKFLOW_EXCHANGE = "workflow-exchange";
     public static final String ERROR_EXCHANGE = "error-exchange";
+    public static final String DELAY_EXCHANGE = "delay-exchange";
+
 
     public RabbitMQConfig(ConfigProperties configProperties) {
         this.configProperties = configProperties;
@@ -79,6 +79,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue delayQueue() {
+        return new Queue(DELAY_QUEUE, true);
+    }
+
+    @Bean
     public TopicExchange exchange() {
         return new TopicExchange(WORKFLOW_EXCHANGE);
     }
@@ -86,6 +91,15 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange errorExchange() {
         return new TopicExchange(ERROR_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange delayExchange(){
+        return ExchangeBuilder
+                .topicExchange(DELAY_EXCHANGE)
+                .delayed()
+                .durable(true)
+                .build();
     }
 
     // 配置失敗重試策略：將失敗策略改為RepublishMessageRecoverer
@@ -117,5 +131,10 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingVideo(@Qualifier("videoQueue") Queue videoQueue, @Qualifier("exchange") TopicExchange exchange) {
         return BindingBuilder.bind(videoQueue).to(exchange).with("workflow.video");
+    }
+
+    @Bean
+    public Binding bindingDelay(@Qualifier("delayQueue") Queue delayQueue, @Qualifier("delayExchange") TopicExchange delayExchange) {
+        return BindingBuilder.bind(delayQueue).to(delayExchange).with("notice.#");
     }
 }
