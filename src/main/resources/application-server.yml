@@ -63,7 +63,7 @@ spring:
             user-name-attribute: userId
   data:
     mongodb:
-      uri: mongodb://${db-username}:${db-password}@localhost:27017
+      uri: mongodb+srv://${db-username}:${mongo-db-password}@gurula.y2btcof.mongodb.net/?retryWrites=true&w=majority&appName=gurula  # mongodb://${db-username}:${db-password}@localhost:27017
   rabbitmq:
     host: localhost
     port: 5672
